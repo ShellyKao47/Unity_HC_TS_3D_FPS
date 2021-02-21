@@ -2,6 +2,7 @@
 
 public class FPSController : MonoBehaviour
 {
+    #region 基本欄位
     [Header("移動"), Range(0, 2000)]
     public float speed;
     [Header("旋轉"), Range(0, 2000)]
@@ -15,6 +16,26 @@ public class FPSController : MonoBehaviour
 
     private Animator ani;
     private Rigidbody rig;
+    #endregion
+
+    #region 開槍欄位
+    [Header("生成子彈的位置")]
+    public Transform pointFire;
+    [Header("子彈")]
+    public GameObject bullet;
+    [Header("子彈目前數量")]
+    public int bulletCurrent = 30;
+    [Header("子彈總數")]
+    public int bulletTotal = 150;
+    [Header("子彈速度")]
+    public int bulletSpeed = 450;
+    #endregion
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = new Color(1, 0, 0, 0.5f);
+        Gizmos.DrawSphere(transform.position + floorOffset, floorRadius);
+    }
 
     private void Awake()
     {
@@ -23,18 +44,31 @@ public class FPSController : MonoBehaviour
         rig = GetComponent<Rigidbody>();
     }
 
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = new Color(1, 0, 0, 0.5f);
-        Gizmos.DrawSphere(transform.position + floorOffset, floorRadius);
-    }
-
     private void Update()
     {
         Move();
         Jump();
+        Fire();
     }
 
+    /// <summary>
+    /// 開槍
+    /// </summary>
+    private void Fire()
+    {
+        // 按下左鍵
+        if (Input.GetKeyDown(KeyCode.Mouse0))
+        {
+            // 暫存子彈 = 生成(物件，座標，角度)
+            GameObject temp = Instantiate(bullet, pointFire.position, pointFire.rotation);
+            // 暫存子彈.取得剛體.添加推力(生成點的前方 * 速度)
+            temp.GetComponent<Rigidbody>().AddForce(pointFire.up * bulletSpeed);
+        }
+    }
+
+    /// <summary>
+    /// 跳躍
+    /// </summary>
     private void Jump()
     {
         // 3D 模式霧裡碰撞偵測
