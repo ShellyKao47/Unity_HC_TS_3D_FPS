@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.AI;
+using System.Collections;
 
 public class Enemy : MonoBehaviour
 {
@@ -28,6 +29,14 @@ public class Enemy : MonoBehaviour
     public float speedBullet = 500;
     [Header("開槍間隔"), Range(0f, 5f)]
     public float interval = 0.5f;
+    [Header("面向玩家的速度"), Range(0f, 100f)]
+    public float speedFace = 5f;
+    [Header("彈匣目前數量")]
+    public int bulletCount = 30;
+    [Header("彈匣數量")]
+    public int bulletClip = 30;
+    [Header("換彈匣的時間"), Range(0f, 5f)]
+    public float addBulletTime = 2.5f;
 
     private float timer;
 
@@ -75,14 +84,49 @@ public class Enemy : MonoBehaviour
     {
         ani.SetBool("跑步開關", false);
 
-        if (timer >= interval)                                          // 如果 計時器 >= 間隔
+        if (timer >= interval)                                                      // 如果 計時器 >= 間隔
         {
-            timer = 0;                                                  // 歸零
-            Instantiate(bullet, point.position, point.rotation);
+            timer = 0;                                                              // 歸零
+            GameObject temp = Instantiate(bullet, point.position, point.rotation);  // 暫存 = 生成子彈
+            temp.GetComponent<Rigidbody>().AddForce(point.right * -speedBullet);    // 取得子彈 剛體 添加推力(前方 * 速度)
+            ManageBulletCount();
         }
         else
         {
-            timer += Time.deltaTime;                                    // 否則 累家時間
+            timer += Time.deltaTime;                                                // 否則 累加時間
+            FaceToPlayer();
         }
+    }
+
+    /// <summary>
+    /// 管理子彈數量
+    /// </summary>
+    private void ManageBulletCount()
+    {
+        bulletCount--;
+
+        if (bulletCount <= 0)
+        {
+            StartCoroutine(AddBullet());
+        }
+    }
+
+    /// <summary>
+    /// 添加子彈
+    /// </summary>
+    private IEnumerator AddBullet()
+    {
+        ani.SetTrigger("換彈匣觸發");
+        yield return new WaitForSeconds(addBulletTime);
+        bulletCount += bulletClip;
+    }
+
+    /// <summary>
+    /// 面向玩家
+    /// </summary>
+    private void FaceToPlayer()
+    {
+        Quaternion faceAngle = Quaternion.LookRotation(player.position - transform.position);                   // 面向向量
+        transform.rotation = Quaternion.Lerp(transform.rotation, faceAngle, Time.deltaTime * speedFace);        // 差值(A B 速度)
     }
 }
