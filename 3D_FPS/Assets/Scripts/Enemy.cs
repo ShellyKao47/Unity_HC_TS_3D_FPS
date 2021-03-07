@@ -39,6 +39,11 @@ public class Enemy : MonoBehaviour
     public float addBulletTime = 2.5f;
 
     private float timer;
+    private bool isAddBullet;
+    /// <summary>
+    /// 血量
+    /// </summary>
+    private float hp = 100;
 
     private void Awake()
     {
@@ -57,6 +62,7 @@ public class Enemy : MonoBehaviour
 
     private void Update()
     {
+        if (isAddBullet) return;
         Track();
     }
 
@@ -117,7 +123,9 @@ public class Enemy : MonoBehaviour
     private IEnumerator AddBullet()
     {
         ani.SetTrigger("換彈匣觸發");
+        isAddBullet = true;
         yield return new WaitForSeconds(addBulletTime);
+        isAddBullet = false;
         bulletCount += bulletClip;
     }
 
@@ -128,5 +136,33 @@ public class Enemy : MonoBehaviour
     {
         Quaternion faceAngle = Quaternion.LookRotation(player.position - transform.position);                   // 面向向量
         transform.rotation = Quaternion.Lerp(transform.rotation, faceAngle, Time.deltaTime * speedFace);        // 差值(A B 速度)
+    }
+
+    /// <summary>
+    /// 受傷處理
+    /// </summary>
+    /// <param name="getDamage">接收到的傷害</param>
+    private void Damage(float getDamage)
+    {
+        hp -= getDamage;
+
+        if (hp <= 0) Dead();
+    }
+
+    private void Dead()
+    {
+        ani.SetTrigger("死亡觸發");
+        GetComponent<SphereCollider>().enabled = false;
+        GetComponent<CapsuleCollider>().enabled = false;
+        enabled = false;
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.tag == "子彈")
+        {
+            float damage = collision.gameObject.GetComponent<Bullet>().attack;
+            Damage(damage);
+        }
     }
 }
