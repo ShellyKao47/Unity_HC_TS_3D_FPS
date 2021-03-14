@@ -37,6 +37,8 @@ public class Enemy : MonoBehaviour
     public int bulletClip = 30;
     [Header("換彈匣的時間"), Range(0f, 5f)]
     public float addBulletTime = 2.5f;
+    [Header("攻擊力"), Range(0f, 100f)]
+    public float attack = 5f;
 
     private float timer;
     private bool isAddBullet;
@@ -94,6 +96,7 @@ public class Enemy : MonoBehaviour
         {
             timer = 0;                                                              // 歸零
             GameObject temp = Instantiate(bullet, point.position, point.rotation);  // 暫存 = 生成子彈
+            temp.GetComponent<Bullet>().attack = attack;
             temp.GetComponent<Rigidbody>().AddForce(point.right * -speedBullet);    // 取得子彈 剛體 添加推力(前方 * 速度)
             ManageBulletCount();
         }

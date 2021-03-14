@@ -15,9 +15,14 @@ public class FPSController : MonoBehaviour
     public Vector3 floorOffset;
     [Header("地板偵測半徑"), Range(0, 20)]
     public float floorRadius = 1;
+    [Header("視角上下限制")]
+    public Vector2 tar = new Vector2(2,3.3f);
 
     private Animator ani;
     private Rigidbody rig;
+    private Transform traMain;
+    private Transform traCam;
+    private Transform target;
     #endregion
 
     #region 開槍欄位
@@ -69,6 +74,9 @@ public class FPSController : MonoBehaviour
         ani = GetComponent<Animator>();
         rig = GetComponent<Rigidbody>();
         aud = GetComponent<AudioSource>();
+
+        traMain = transform.Find("Main Camera");
+        traCam = transform.Find("Camera");
     }
 
     private void Update()
@@ -177,5 +185,37 @@ public class FPSController : MonoBehaviour
 
         float x = Input.GetAxis("Mouse X");                     // 滑鼠左右的值
         transform.Rotate(0, x * Time.deltaTime * turn, 0);      // 旋轉
+    }
+
+    /// <summary>
+    /// 血量
+    /// </summary>
+    private float hp = 100;
+
+    /// <summary>
+    /// 受傷處理
+    /// </summary>
+    /// <param name="getDamage">接收到的傷害</param>
+    private void Damage(float getDamage)
+    {
+        if (hp <= 0) return;
+            hp -= getDamage ;
+
+        if (hp <= 0) Dead();
+    }
+
+    private void Dead()
+    {
+        ani.SetTrigger("死亡觸發");
+        enabled = false;
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.tag == "子彈")
+        {
+            float damage = collision.gameObject.GetComponent<Bullet>().attack;
+            Damage(damage);
+        }
     }
 }
